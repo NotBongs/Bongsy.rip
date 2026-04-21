@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donate — Bongsy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:        #34da9e;
+  --green-dim:    rgba(52,218,158,.10);
+  --green-border: rgba(52,218,158,.22);
+  --green-glow:   0 0 22px rgba(52,218,158,.25);
+  --bg:           #0b0d10;
+  --bg-2:         #0e1014;
+  --surface:      #13161c;
+  --surface-2:    #181c24;
+  --border:       rgba(255,255,255,.07);
+  --border-2:     rgba(255,255,255,.04);
+  --text:         #e4e8ee;
+  --text-muted:   #6b7280;
+  --text-dim:     #6b72809a;
+  --nav-h:        66px;
+
+  /* payment brand colours */
+  --cash-green:   #00d64f;
+  --cash-dim:     rgba(0,214,79,.10);
+  --cash-border:  rgba(0,214,79,.22);
+  --cash-glow:    0 0 28px rgba(0,214,79,.22);
+
+  --btc-orange:   #f7931a;
+  --btc-dim:      rgba(247,147,26,.10);
+  --btc-border:   rgba(247,147,26,.22);
+  --btc-glow:     0 0 28px rgba(247,147,26,.22);
+
+  --eth-blue:     #627eea;
+  --eth-dim:      rgba(98,126,234,.10);
+  --eth-border:   rgba(98,126,234,.22);
+  --eth-glow:     0 0 28px rgba(98,126,234,.22);
+
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{ font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; min-height:100vh; }
+h1,h2,h3{ font-family:'Outfit',sans-serif; }
+::-webkit-scrollbar{ width:4px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:var(--green-border); border-radius:99px; }
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;
+  display:flex;align-items:center;padding:0 52px;gap:0;
+  background:rgba(11,13,16,.9);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+.nav-logo{
+  font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;
+  color:var(--green);text-shadow:0 0 20px rgba(52,218,158,.4);
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+}
+.nav-logo-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);animation:blink 2s ease infinite;
+}
+
+/* CANVAS */
+#bgc{ position:fixed;inset:0;z-index:0;pointer-events:none; }
+
+/* PAGE */
+.page{
+  position:relative;z-index:1;max-width:1100px;margin:0 auto;
+  padding:calc(var(--nav-h) + 60px) 24px 120px;
+}
+
+/* PAGE HEADER */
+.page-hdr{ margin-bottom:56px;animation:fadeD .6s ease both; }
+.hdr-eye{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:14px;
+}
+.hdr-eye::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);animation:blink 2s infinite;
+}
+.page-hdr h1{
+  font-family:'Outfit',sans-serif;font-size:clamp(32px,6vw,58px);font-weight:900;
+  letter-spacing:-2px;color:#fff;line-height:1;margin-bottom:14px;
+}
+.page-hdr h1 span{ color:var(--green); }
+.page-hdr p{ font-size:.92rem;color:var(--text-muted);max-width:540px;line-height:1.75; }
+
+/* GRID */
+.grid-2{ display:grid;grid-template-columns:1fr 1fr;gap:18px; }
+.grid-3{ display:grid;grid-template-columns:repeat(3,1fr);gap:18px; }
+.col-full{ grid-column:1/-1; }
+
+@media(max-width:820px){ .grid-2,.grid-3{ grid-template-columns:1fr; } .col-full{ grid-column:1; } }
+@media(min-width:821px) and (max-width:1080px){ .grid-3{ grid-template-columns:1fr 1fr; } }
+
+/* === PAYMENT CARD BASE === */
+.pay-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:28px;position:relative;overflow:hidden;
+  transition:border-color .3s,box-shadow .3s,transform .3s;
+  animation:fadeU .55s ease both;
+}
+.pay-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent-border,var(--green-border)),transparent);
+}
+/* glowing orb top-right */
+.pay-card::after{
+  content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--accent-glow-color,rgba(52,218,158,.08)) 0%,transparent 70%);
+  pointer-events:none;transition:opacity .3s;opacity:.7;
+}
+.pay-card:hover{ transform:translateY(-4px); }
+.pay-card:hover::after{ opacity:1; }
+
+/* colour variants */
+.pay-card.cashapp{
+  --accent-border:var(--cash-border);
+  --accent-glow-color:rgba(0,214,79,.12);
+}
+.pay-card.cashapp:hover{ border-color:var(--cash-border);box-shadow:var(--cash-glow); }
+
+.pay-card.bitcoin{
+  --accent-border:var(--btc-border);
+  --accent-glow-color:rgba(247,147,26,.12);
+}
+.pay-card.bitcoin:hover{ border-color:var(--btc-border);box-shadow:var(--btc-glow); }
+
+/* ── ETHEREUM — preferred card ── */
+.pay-card.ethereum{
+  overflow: hidden;
+  border-color:transparent;
+  background:
+    linear-gradient(var(--surface),var(--surface)) padding-box,
+    conic-gradient(from var(--angle,0deg),
+      rgba(98,126,234,0) 0%,
+      rgba(98,126,234,.7) 20%,
+      rgba(160,180,255,.95) 35%,
+      rgba(98,126,234,.7) 50%,
+      rgba(98,126,234,0) 70%
+    ) border-box;
+
+  animation: fadeU .55s ease both, eth-rotate 4s linear 1s infinite;
+  box-shadow: 0 0 32px rgba(98,126,234,.12),
+              0 0 80px rgba(98,126,234,.06);
+}
+
+
+.pay-card.ethereum::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent,
+    rgba(160,180,255,.9),
+    transparent
+  );
+  animation: eth-line-travel 4s ease-in-out 1s infinite;
+}
+
+/* sweep layer */
+.pay-card.ethereum::after{
+  content:'';
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  border-radius:20px;
+  pointer-events:none;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    rgba(160,180,255,.13) 48%,
+    rgba(180,200,255,.18) 50%,
+    rgba(160,180,255,.13) 52%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: eth-sweep 3.8s ease-in-out 1s infinite;
+  z-index:2;
+}
+
+
+.pay-card.ethereum:hover{
+  box-shadow: 0 0 40px rgba(98,126,234,.25),
+              0 0 90px rgba(98,126,234,.1);
+  transform:translateY(-4px);
+}
+
+
+@property --angle {
+  syntax:'<angle>';
+  initial-value:0deg;
+  inherits:false;
+}
+
+@keyframes eth-rotate{
+  to { --angle:360deg; }
+}
+
+
+@keyframes eth-line-travel{
+  0%  { transform:scaleX(0); transform-origin:left; opacity:0; }
+  15% { transform:scaleX(1); transform-origin:left; opacity:1; }
+  85% { transform:scaleX(1); transform-origin:right; opacity:1; }
+  100%{ transform:scaleX(0); transform-origin:right; opacity:0; }
+}
+
+@keyframes eth-sweep{
+  0%   { transform:translateX(-100%); opacity:0; }
+  15%  { opacity:1; }
+  85%  { opacity:1; }
+  100% { transform:translateX(100%); opacity:0; }
+}
+
+/* preferred badge */
+.preferred-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:100px;
+  background:rgba(98,126,234,.15);border:1px solid rgba(98,126,234,.4);
+  color:#8fa4f3;animation:preferred-glow 3s ease-in-out infinite;
+}
+.preferred-badge::before{
+  content:'';width:5px;height:5px;border-radius:50%;background:#627eea;
+  box-shadow:0 0 6px #627eea;animation:blink 1.5s ease infinite;
+}
+@keyframes preferred-glow{
+  0%,100%{ box-shadow:none; }
+  50%    { box-shadow:0 0 10px rgba(98,126,234,.3); }
+}
+
+.pay-card:nth-child(1){animation-delay:.05s}
+.pay-card:nth-child(2){animation-delay:.12s}
+.pay-card:nth-child(3){animation-delay:.19s}
+.pay-card:nth-child(4){animation-delay:.26s}
+.pay-card:nth-child(5){animation-delay:.33s}
+
+/* CARD HEADER */
+.card-head{ display:flex;align-items:center;gap:14px;margin-bottom:22px; }
+.card-logo{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:22px;position:relative;overflow:hidden;
+  transition:transform .25s;
+}
+.pay-card:hover .card-logo{ transform:scale(1.08) rotate(-3deg); }
+.card-logo.cash{ background:var(--cash-dim);border:1px solid var(--cash-border); }
+.card-logo.btc  { background:var(--btc-dim); border:1px solid var(--btc-border);  }
+.card-logo.eth  { background:var(--eth-dim); border:1px solid var(--eth-border);  }
+
+.card-logo.gen  { background:var(--green-dim);border:1px solid var(--green-border); }
+
+.card-meta{ flex:1;min-width:0; }
+.card-name{
+  font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;
+  color:#fff;letter-spacing:-.3px;
+}
+.card-tag{
+  font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:600;
+  letter-spacing:2.5px;text-transform:uppercase;margin-top:3px;
+}
+.cash-tag{ color:var(--cash-green); }
+.btc-tag { color:var(--btc-orange); }
+.eth-tag { color:var(--eth-blue); }
+
+.gen-tag { color:var(--green); }
+
+/* DIVIDER */
+.divider{ height:1px;background:var(--border-2);margin:0 0 20px; }
+
+/* ADDRESS / CASHTAG ROW */
+.addr-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:10px;
+  padding:11px 14px;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.addr-row::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px;
+}
+.cashapp .addr-row::before{ background:var(--cash-green); }
+.bitcoin .addr-row::before{ background:var(--btc-orange); }
+.ethereum .addr-row::before{ background:var(--eth-blue); }
+
+
+.addr-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text-dim);white-space:nowrap;flex-shrink:0;
+}
+.addr-val{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:500;
+  color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.copy-btn{
+  background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text-muted);transition:all .2s;flex-shrink:0;
+  display:flex;align-items:center;gap:5px;
+}
+.copy-btn:hover{ color:#fff;background:rgba(255,255,255,.07); }
+.copy-btn.copied{ color:var(--green) !important; }
+.copy-btn svg{ width:12px;height:12px;transition:transform .2s; }
+.copy-btn:hover svg{ transform:scale(1.2); }
+
+/* SECONDARY INFO */
+.info-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--border-2);
+}
+.info-row:last-child{ border-bottom:none; }
+.info-k{ font-size:11.5px;color:var(--text-muted); }
+.info-v{ font-size:11.5px;font-weight:500;color:var(--text); }
+.info-v.mono{ font-family:'JetBrains Mono',monospace;font-size:11px; }
+
+/* ACTION BUTTON */
+.action-btn{
+  width:100%;padding:12px 20px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.5px;
+  transition:all .25s;margin-top:18px;position:relative;overflow:hidden;display:flex;
+  align-items:center;justify-content:center;gap:8px;text-decoration:none;
+}
+.action-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.07) 0%,transparent 60%);
+  pointer-events:none;
+}
+.action-btn:hover{ transform:translateY(-2px); }
+.action-btn:active{ transform:translateY(0); }
+
+.btn-cash { background:var(--cash-green);color:#050505;box-shadow:0 4px 20px rgba(0,214,79,.25); }
+.btn-cash:hover { box-shadow:0 6px 32px rgba(0,214,79,.4); }
+
+.btn-btc  { background:var(--btc-orange);color:#050505;box-shadow:0 4px 20px rgba(247,147,26,.25); }
+.btn-btc:hover  { box-shadow:0 6px 32px rgba(247,147,26,.4); }
+
+.btn-eth  { background:var(--eth-blue);color:#fff;box-shadow:0 4px 20px rgba(98,126,234,.25); }
+.btn-eth:hover  { box-shadow:0 6px 32px rgba(98,126,234,.4); }
+
+
+
+.btn-green{ background:var(--green);color:#050505;box-shadow:0 4px 20px rgba(52,218,158,.25); }
+.btn-green:hover{ box-shadow:0 6px 32px rgba(52,218,158,.4); }
+
+/* THANK YOU BANNER */
+.ty-banner{
+  background:var(--surface);border:1px solid var(--green-border);border-radius:20px;
+  padding:32px 36px;position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:24px;
+  animation:fadeU .55s ease both;animation-delay:.38s;
+}
+.ty-banner::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--green-border),transparent);
+}
+.ty-banner::after{
+  content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(52,218,158,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.ty-icon{
+  font-size:42px;flex-shrink:0;filter:drop-shadow(0 0 12px rgba(52,218,158,.4));
+  animation:float 4s ease-in-out infinite;
+}
+.ty-text h2{
+  font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:900;
+  color:#fff;letter-spacing:-.5px;margin-bottom:6px;
+}
+.ty-text p{ font-size:.88rem;color:var(--text-muted);line-height:1.7;max-width:480px; }
+
+/* QR MODAL */
+.qr-modal-overlay{
+  position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);
+  backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.qr-modal-overlay.open{ opacity:1;pointer-events:all; }
+.qr-modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:32px;width:320px;text-align:center;position:relative;
+  transform:scale(.92) translateY(10px);transition:transform .3s;
+}
+.qr-modal-overlay.open .qr-modal{ transform:scale(1) translateY(0); }
+.qr-modal h3{ font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:6px;color:#fff; }
+.qr-modal p{ font-size:.78rem;color:var(--text-muted);margin-bottom:20px; }
+.qr-canvas-wrap{
+  width:200px;height:200px;margin:0 auto 18px;border-radius:12px;
+  background:white;display:flex;align-items:center;justify-content:center;
+  padding:10px;position:relative;
+}
+canvas.qr-canvas{ width:180px;height:180px; }
+.qr-addr{
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);
+  word-break:break-all;line-height:1.5;margin-bottom:18px;
+}
+.qr-close{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+  padding:9px 22px;color:var(--text-muted);font-family:'Outfit',sans-serif;
+  font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.qr-close:hover{ color:#fff;border-color:var(--green-border); }
+
+/* NETWORK BADGE */
+.net-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:100px;
+  border:1px solid;
+}
+.net-erc20{ color:#627eea;border-color:rgba(98,126,234,.3);background:rgba(98,126,234,.07); }
+
+.net-main { color:var(--btc-orange);border-color:rgba(247,147,26,.3);background:rgba(247,147,26,.07); }
+
+/* COPY TOAST */
+.toast{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface-2);border:1px solid var(--green-border);border-radius:100px;
+  padding:10px 22px;font-size:.8rem;font-weight:600;color:var(--green);
+  font-family:'JetBrains Mono',monospace;letter-spacing:1px;
+  z-index:500;opacity:0;transition:all .3s;pointer-events:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.4),var(--green-glow);
+}
+.toast.show{ opacity:1;transform:translateX(-50%) translateY(0); }
+
+/* ANIMATIONS */
+@keyframes blink{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.3; }
+}
+@keyframes fadeD{
+  from{ opacity:0;transform:translateY(-16px); }
+  to  { opacity:1;transform:translateY(0); }
+}
+@keyframes fadeU{
+  from{ opacity:0;transform:translateY(20px); }
+  to  { opacity:1;transform:translateY(0); }
+}
+@keyframes float{
+  0%,100%{ transform:translateY(0); }
+  50%     { transform:translateY(-8px); }
+}
+@keyframes shimmer{
+  0%  { background-position:-200% center; }
+  100%{ background-position:200% center; }
+}
+.shimmer-text{
+  background:linear-gradient(90deg,var(--green) 0%,#7fffd4 40%,var(--green) 80%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 3s linear infinite;
+}
+
+/* QR BTN */
+.qr-btn{
+  background:none;border:1px solid var(--border);border-radius:7px;
+  padding:4px 10px;cursor:pointer;font-family:'JetBrains Mono',monospace;
+  font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text-muted);transition:all .2s;
+}
+.qr-btn:hover{ color:#fff;border-color:var(--green-border); }
+
+/* SECTION LABEL */
+.section-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);
+  margin:32px 0 14px;display:flex;align-items:center;gap:10px;
+}
+.section-label::after{ content:'';flex:1;height:1px;background:var(--border-2); }
+</style>
+</head>
+<body>
+
+<canvas id="bgc"></canvas>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-dot"></div>
+    Bongsy
+  </a>
+</nav>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-hdr">
+    <div class="hdr-eye">support</div>
+    <h1>Send a <span class="shimmer-text">Donation</span></h1>
+    <p>Every contribution helps keep things running. Choose your preferred payment method below — all addresses are verified and safe to use.</p>
+  </div>
+
+  <!-- Thank You Banner -->
+  <div class="ty-banner" style="margin-bottom:36px;">
+    <div class="ty-icon">💚</div>
+    <div class="ty-text">
+      <h2>Thanks for your support</h2>
+      <p>Whether it's $1 or $100, it genuinely means a lot. Funds go toward server costs, projects, and future content. No amount is too small.</p>
+    </div>
+  </div>
+
+  <!-- CashApp -->
+  <div class="section-label">Instant payment</div>
+  <div style="max-width:520px;margin:0 auto 18px;">
+
+    <!-- CashApp -->
+    <div class="pay-card cashapp">
+      <div class="card-head">
+        <div class="card-logo cash">
+          <!-- CashApp $ logo -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect width="24" height="24" rx="6" fill="transparent"/>
+            <text x="12" y="17" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="900" font-size="16" fill="#00d64f">$</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <div class="card-name">Cash App</div>
+          <div class="card-tag cash-tag">instant · no fees</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <div class="addr-row">
+        <span class="addr-label">$cashtag</span>
+        <span class="addr-val" id="cashtag-val">$Bongsy</span>
+        <button class="copy-btn" onclick="copyText('$Bongsy', this)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="5" width="9" height="9" rx="2"/><path d="M10 5V3a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2"/>
+          </svg>
+          Copy
+        </button>
+      </div>
+
+      <div class="info-row">
+        <span class="info-k">Processing time</span>
+        <span class="info-v" style="color:var(--cash-green);">Instant</span>
+      </div>
+      <div class="info-row">
+        <span class="info-k">Fees</span>
+        <span class="info-v">None for standard</span>
+      </div>
+      <div class="info-row">
+        <span class="info-k">Platform</span>
+        <span class="info-v">iOS · Android · Web</span>
+      </div>
+
+      <a class="action-btn btn-cash" href="https://cash.app/$Bongsy" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm.5 4H7v.75a2.25 2.25 0 0 0 0 4.5h1a.75.75 0 1 1 0 1.5H6.5v1h1V13h1v-.75a2.25 2.25 0 0 0 0-4.5H7a.75.75 0 1 1 0-1.5h2V5H8.5z"/></svg>
+        Open Cash App
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Crypto -->
+  <div class="section-label">Cryptocurrency</div>
+  <div class="grid-2">
+
+    <!-- Bitcoin -->
+    <div class="pay-card bitcoin">
+      <div class="card-head">
+        <div class="card-logo btc">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.548v-.002zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.705-.167-1.064-.25l.526-2.127-1.32-.33-.54 2.165c-.285-.067-.565-.132-.84-.2l-1.815-.45-.35 1.407s.975.225.955.236c.535.136.63.486.615.766l-1.477 5.92c-.075.166-.24.406-.614.314.015.02-.96-.24-.96-.24l-.66 1.51 1.71.426.93.242-.54 2.19 1.32.327.54-2.17c.36.1.705.19 1.05.273l-.51 2.154 1.32.33.545-2.19c2.24.427 3.93.257 4.64-1.774.57-1.637-.03-2.58-1.217-3.196.854-.193 1.5-.76 1.68-1.93h.01zm-3.01 4.22c-.404 1.64-3.157.75-4.05.53l.72-2.9c.896.23 3.757.67 3.33 2.37zm.41-4.24c-.37 1.49-2.662.735-3.405.55l.654-2.64c.744.18 3.137.524 2.75 2.084v.006z" fill="#f7931a"/>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <div class="card-name">Bitcoin</div>
+          <div class="card-tag btc-tag">BTC · mainnet</div>
+        </div>
+        <span class="net-badge net-main">Mainnet</span>
+      </div>
+      <div class="divider"></div>
+
+      <div class="addr-row">
+        <span class="addr-label">Address</span>
+        <span class="addr-val" id="btc-addr">bc1qa90u84ga5nsy70m973hyff8kflv70qwd52dzen</span>
+        <button class="copy-btn" onclick="copyText('bc1qa90u84ga5nsy70m973hyff8kflv70qwd52dzen', this)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="5" width="9" height="9" rx="2"/><path d="M10 5V3a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2"/>
+          </svg>
+          Copy
+        </button>
+      </div>
+
+      <div class="info-row">
+        <span class="info-k">Network</span>
+        <span class="info-v">Bitcoin Mainnet</span>
+      </div>
+      <div class="info-row">
+        <span class="info-k">Format</span>
+        <span class="info-v mono">Native SegWit (bc1)</span>
+      </div>
+      <div class="info-row">
+        <span class="info-k">Confirmations</span>
+        <span class="info-v">~10–60 min</span>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button class="action-btn btn-btc" style="flex:1;margin-top:0;" onclick="showQR('Bitcoin','bc1qa90u84ga5nsy70m973hyff8kflv70qwd52dzen','#f7931a')">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2V2zm1 1v3h3V3H3zm8-1h5v5h-5V2zm1 1v3h3V3h-3zM2 9h5v5H2V9zm1 1v3h3v-3H3zm8 0h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 0h1v1h-1v-1zM3 3h1v1H3V3zm8 0h1v1h-1V3zM3 11h1v1H3v-1z"/></svg>
+          Show QR
+        </button>
+      </div>
+    </div>
+
+    <!-- Ethereum -->
+    <div class="pay-card ethereum">
+      <div class="card-head">
+        <div class="card-logo eth">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 1.5L5.25 12.219 12 15.844l6.75-3.625L12 1.5z" fill="#627eea" opacity=".8"/>
+            <path d="M5.25 12.219L12 15.844l6.75-3.625L12 1.5l-6.75 10.719z" fill="#627eea"/>
+            <path d="M5.25 13.406L12 22.5l6.75-9.094L12 17.031l-6.75-3.625z" fill="#627eea" opacity=".6"/>
+            <path d="M12 17.031l6.75-3.625L12 22.5V17.031z" fill="#627eea" opacity=".8"/>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <div class="card-name">Ethereum</div>
+          <div class="card-tag eth-tag">ETH · ERC-20</div>
+        </div>
+        <span class="preferred-badge">Preferred</span>
+      </div>
+      <div class="divider"></div>
+
+      <div class="addr-row">
+        <span class="addr-label">Address</span>
+        <span class="addr-val" id="eth-addr">0x6e2075aD2D1A8c9bE90cA862b1Aef9F9B1825F44</span>
+        <button class="copy-btn" onclick="copyText('0x6e2075aD2D1A8c9bE90cA862b1Aef9F9B1825F44', this)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="5" width="9" height="9" rx="2"/><path d="M10 5V3a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2"/>
+          </svg>
+          Copy
+        </button>
+      </div>
+
+      <div class="info-row">
+        <span class="info-k">Network</span>
+        <span class="info-v">Ethereum Mainnet</span>
+      </div>
+      <div class="info-row">
+        <span class="info-k">Accepts</span>
+        <span class="info-v mono">ETH · USDC · USDT · ERC-20</span>
+      </div>
+      <div class="info-row">
+        <span class="info-k">Confirmations</span>
+        <span class="info-v">~15 sec – 5 min</span>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button class="action-btn btn-eth" style="flex:1;margin-top:0;" onclick="showQR('Ethereum','0x6e2075aD2D1A8c9bE90cA862b1Aef9F9B1825F44','#627eea')">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2V2zm1 1v3h3V3H3zm8-1h5v5h-5V2zm1 1v3h3V3h-3zM2 9h5v5H2V9zm1 1v3h3v-3H3zm8 0h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 0h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 0h1v1h-1v-1zM3 3h1v1H3V3zm8 0h1v1h-1V3zM3 11h1v1H3v-1z"/></svg>
+          Show QR
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- QR Modal -->
+<div class="qr-modal-overlay" id="qr-overlay" onclick="closeQR(event)">
+  <div class="qr-modal">
+    <h3 id="qr-title">Bitcoin</h3>
+    <p id="qr-sub">Scan with your wallet app</p>
+    <div class="qr-canvas-wrap">
+      <div id="qr-container"></div>
+    </div>
+    <div class="qr-addr" id="qr-addr-text"></div>
+    <button class="qr-close" onclick="closeQR()">Close</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<!-- Copy Toast -->
+<div class="toast" id="toast">Copied to clipboard ✓</div>
+
+<script>
+/* ── BACKGROUND CANVAS ── */
+const bgc=document.getElementById('bgc');
+const bx=bgc.getContext('2d');
+let W,H,pts=[];
+const CONNECT_DIST=140;
+const PARTICLE_COUNT_DIVISOR=9000;
+
+function resize(){
+  W=bgc.width=window.innerWidth;
+  H=bgc.height=window.innerHeight;
+}
+
+function mkPts(){
+  pts=[];
+  const n=Math.min(Math.floor((W*H)/PARTICLE_COUNT_DIVISOR),120);
+  for(let i=0;i<n;i++){
+    pts.push({
+      x:Math.random()*W,
+      y:Math.random()*H,
+      vx:(Math.random()-.5)*.22,
+      vy:(Math.random()-.5)*.22,
+      r:Math.random()*1.8+1.0,
+      o:Math.random()*.45+.2,
+      phase:Math.random()*Math.PI*2
+    });
+  }
+}
+
+function drawBg(){
+  bx.clearRect(0,0,W,H);
+  const now=Date.now()/1000;
+
+  /* subtle vignette */
+  const vig=bx.createRadialGradient(W/2,H/2,H*.1,W/2,H/2,H*.85);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(1,'rgba(0,0,0,0.55)');
+  bx.fillStyle=vig;
+  bx.fillRect(0,0,W,H);
+
+  /* noise texture overlay — small stippled dots */
+  bx.save();
+  for(let i=0;i<300;i++){
+    const nx=Math.random()*W, ny=Math.random()*H;
+    bx.beginPath();
+    bx.arc(nx,ny,.4,0,Math.PI*2);
+    bx.fillStyle=`rgba(52,218,158,${Math.random()*.04})`;
+    bx.fill();
+  }
+  bx.restore();
+
+  /* move particles */
+  pts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+    if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+  });
+
+  /* connection lines */
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<CONNECT_DIST){
+        const alpha=(1-dist/CONNECT_DIST)*0.045;
+        bx.beginPath();
+        bx.moveTo(pts[i].x,pts[i].y);
+        bx.lineTo(pts[j].x,pts[j].y);
+        bx.strokeStyle=`rgba(52,218,158,${alpha})`;
+        bx.lineWidth=.8;
+        bx.stroke();
+      }
+    }
+  }
+
+  /* draw particles with glow */
+  pts.forEach(p=>{
+    const pulse=Math.sin(now*.9+p.phase)*0.25+0.75;
+    const alpha=p.o*pulse*.25;
+
+    /* outer glow */
+    const grd=bx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+    grd.addColorStop(0,`rgba(52,218,158,${alpha*.5})`);
+    grd.addColorStop(1,`rgba(52,218,158,0)`);
+    bx.beginPath();bx.arc(p.x,p.y,p.r*4,0,Math.PI*2);
+    bx.fillStyle=grd;bx.fill();
+
+    /* core dot */
+    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    bx.fillStyle=`rgba(52,218,158,${alpha})`;bx.fill();
+  });
+
+  requestAnimationFrame(drawBg);
+}
+
+window.addEventListener('resize',()=>{resize();mkPts();});
+resize();mkPts();drawBg();
+
+/* ── COPY ── */
+let toastTimer;
+function copyText(text,btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    if(btn){
+      const orig=btn.innerHTML;
+      btn.innerHTML='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8l4 4 8-8"/></svg> Copied!';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.innerHTML=orig; btn.classList.remove('copied'); },2000);
+    }
+    const t=document.getElementById('toast');
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+  });
+}
+
+/* ── QR CODE (real, scannable via qrcode.js) ── */
+let qrInstance=null;
+function showQR(name,addr){
+  document.getElementById('qr-title').textContent=name+' Address';
+  document.getElementById('qr-sub').textContent='Scan with your wallet app to send';
+  document.getElementById('qr-addr-text').textContent=addr;
+  document.getElementById('qr-overlay').classList.add('open');
+  const container=document.getElementById('qr-container');
+  container.innerHTML='';
+  qrInstance=new QRCode(container,{
+    text:addr,
+    width:180,
+    height:180,
+    colorDark:'#111111',
+    colorLight:'#ffffff',
+    correctLevel:QRCode.CorrectLevel.M
+  });
+}
+function closeQR(e){
+  if(!e||e.target===document.getElementById('qr-overlay'))
+    document.getElementById('qr-overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>
